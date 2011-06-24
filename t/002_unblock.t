@@ -1,12 +1,13 @@
 #!perl
 use strict;
 use warnings FATAL => 'all';
-use if ($^O ne 'linux' or $ENV{PERL_PSELECT_FORCE_TEST}),
-    'Test::More', skip_all => 'pselect(2) is supported only in Linux';
+use if $ENV{PERL_PSELECT_TEST_DISABLE}, # for shipit on MacOSX
+    'Test::More' => skip_all => 'skip for releasing';
+
 use Errno ();
 use POSIX ();
-use POSIX::pselect;
 use Time::HiRes ();
+use POSIX::pselect;
 
 use Test::More tests => 5;
 
@@ -26,7 +27,7 @@ sub doit {
     ok ! $got_usr1, 'did not get SIGUSR1';
     # perform a pselect
     my $now = Time::HiRes::time();
-    my $ret = POSIX::pselect::pselect(undef, undef, undef, 1, do {
+    my $ret = pselect(undef, undef, undef, 1, do {
         my $ss = POSIX::SigSet->new;
         $ss->fillset;
         $ss->delset(POSIX::SIGUSR1());
